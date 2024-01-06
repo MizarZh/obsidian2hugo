@@ -17,8 +17,10 @@ export default class Obsidian2Hugo extends Plugin {
       (evt: MouseEvent) => {
         folder2folder(
           this.app,
-          this.settings.inputFolder,
-          this.settings.exportFolder
+          this.settings.exposeFolder,
+          this.settings.blogRoot,
+          this.settings.outputPostFolder,
+          this.settings.outputAssetFolder
         );
       }
     );
@@ -35,8 +37,10 @@ export default class Obsidian2Hugo extends Plugin {
       callback: () => {
         folder2folder(
           this.app,
-          this.settings.inputFolder,
-          this.settings.exportFolder
+          this.settings.exposeFolder,
+          this.settings.blogRoot,
+          this.settings.outputPostFolder,
+          this.settings.outputAssetFolder
         );
       },
     });

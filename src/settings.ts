@@ -3,23 +3,19 @@ import Obsidian2Hugo from "./main";
 import { FileSuggest, FolderSuggest } from "./ui";
 
 export interface Settings {
+  exposeFolder: string;
   blogRoot: string;
   outputPostFolder: string;
   isRelative: boolean;
   outputAssetFolder: string;
-  exportFolder: string;
-  inputFolder: string;
-  assetFolder: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+  exposeFolder: "",
   blogRoot: "",
-  outputPostFolder: "",
+  outputPostFolder: "content/posts",
   isRelative: false,
-  outputAssetFolder: "",
-  exportFolder: "",
-  inputFolder: "",
-  assetFolder: "",
+  outputAssetFolder: "assets",
 };
 
 export class SettingTab extends PluginSettingTab {
@@ -35,47 +31,48 @@ export class SettingTab extends PluginSettingTab {
 
     containerEl.empty();
 
-    // new Setting(containerEl)
-    //   .setName("Setting #1")
-    //   .setDesc("It's a secret")
-    //   .addText((text) =>
-    //     text
-    //       .setPlaceholder("Enter your secret")
-    //       .setValue(this.plugin.settings.mySetting)
-    //       .onChange(async (value) => {
-    //         this.plugin.settings.mySetting = value;
-    //         await this.plugin.saveSettings();
-    //       })
-    //   );
+    new Setting(containerEl)
+    .setName("Expose folder")
+    .setDesc("folder you want to expose")
+    .addText((text) => {
+      new FolderSuggest(this.app, text.inputEl);
+      text.setValue(this.plugin.settings.exposeFolder).onChange(async (text) => {
+        this.plugin.settings.exposeFolder = text;
+        await this.plugin.saveSettings();
+      });
+    });
 
     new Setting(containerEl)
-      .setName("Folder path")
-      .setDesc("path you want to be exported")
+      .setName("Blog path")
+      .setDesc("path to the root path of the blog")
+      .addText((text) => {
+        text.setValue(this.plugin.settings.blogRoot).onChange(async (text) => {
+          this.plugin.settings.blogRoot = text;
+          await this.plugin.saveSettings();
+        });
+      });
+
+    new Setting(containerEl)
+      .setName("Blog posts folder")
+      .setDesc("path to the post folder with respects to blog root")
       .addText((text) => {
         new FolderSuggest(this.app, text.inputEl);
         text
-          .setValue(this.plugin.settings.inputFolder)
-          .onChange(async (evt) => {
-            this.plugin.settings.inputFolder = evt;
+          .setValue(this.plugin.settings.outputPostFolder)
+          .onChange(async (text) => {
+            this.plugin.settings.outputPostFolder = text;
             await this.plugin.saveSettings();
           });
       });
 
-    // new Setting(containerEl)
-    //   .setName("Asset path")
-    //   .setDesc("path where assets are located")
-    //   .addText((text) => {
-    //     new FileSuggest(this.app, text.inputEl);
-    //   });
-
     new Setting(containerEl)
-      .setName("Export path")
-      .setDesc("path you want to export to")
+      .setName("Blog assets folder")
+      .setDesc("path to the assets folder with respects to blog root")
       .addText((text) => {
         text
-          .setValue(this.plugin.settings.exportFolder)
-          .onChange(async (evt) => {
-            this.plugin.settings.exportFolder = evt;
+          .setValue(this.plugin.settings.outputAssetFolder)
+          .onChange(async (text) => {
+            this.plugin.settings.outputAssetFolder = text;
             await this.plugin.saveSettings();
           });
       });
