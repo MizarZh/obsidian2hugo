@@ -7,7 +7,8 @@ export interface Settings {
   blogRoot: string;
   outputPostFolder: string;
   isRelative: boolean;
-  outputAssetFolder: string;
+  outputStaticFolder: string;
+  staticConfig: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -15,7 +16,11 @@ export const DEFAULT_SETTINGS: Settings = {
   blogRoot: "",
   outputPostFolder: "content/posts",
   isRelative: false,
-  outputAssetFolder: "assets",
+  outputStaticFolder: "static",
+  staticConfig: `{
+    "images": "png|jpg|svg|webp",
+    "other": "pdf"
+  }`,
 };
 
 export class SettingTab extends PluginSettingTab {
@@ -32,15 +37,17 @@ export class SettingTab extends PluginSettingTab {
     containerEl.empty();
 
     new Setting(containerEl)
-    .setName("Expose folder")
-    .setDesc("folder you want to expose")
-    .addText((text) => {
-      new FolderSuggest(this.app, text.inputEl);
-      text.setValue(this.plugin.settings.exposeFolder).onChange(async (text) => {
-        this.plugin.settings.exposeFolder = text;
-        await this.plugin.saveSettings();
+      .setName("Expose folder")
+      .setDesc("folder you want to expose")
+      .addText((text) => {
+        new FolderSuggest(this.app, text.inputEl);
+        text
+          .setValue(this.plugin.settings.exposeFolder)
+          .onChange(async (text) => {
+            this.plugin.settings.exposeFolder = text;
+            await this.plugin.saveSettings();
+          });
       });
-    });
 
     new Setting(containerEl)
       .setName("Blog path")
@@ -66,13 +73,25 @@ export class SettingTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName("Blog assets folder")
-      .setDesc("path to the assets folder with respects to blog root")
+      .setName("Blog static folder")
+      .setDesc("path to the static folder with respects to blog root")
       .addText((text) => {
         text
-          .setValue(this.plugin.settings.outputAssetFolder)
+          .setValue(this.plugin.settings.outputStaticFolder)
           .onChange(async (text) => {
-            this.plugin.settings.outputAssetFolder = text;
+            this.plugin.settings.outputStaticFolder = text;
+            await this.plugin.saveSettings();
+          });
+      });
+
+    new Setting(containerEl)
+      .setName("Static file config")
+      .setDesc("config json file for static file")
+      .addTextArea((text) => {
+        text
+          .setValue(this.plugin.settings.staticConfig)
+          .onChange(async (text) => {
+            this.plugin.settings.staticConfig = text;
             await this.plugin.saveSettings();
           });
       });

@@ -10,7 +10,6 @@ export default class Obsidian2Hugo extends Plugin {
   async onload() {
     await this.loadSettings();
 
-    // // This creates an icon in the left ribbon.
     const ribbonIconEl = this.addRibbonIcon(
       "dice",
       "Sample Plugin",
@@ -20,11 +19,12 @@ export default class Obsidian2Hugo extends Plugin {
           this.settings.exposeFolder,
           this.settings.blogRoot,
           this.settings.outputPostFolder,
-          this.settings.outputAssetFolder
+          this.settings.outputStaticFolder,
+          this.settings.staticConfig
         );
+        new Notice("Export done!");
       }
     );
-    // // Perform additional things with the ribbon
     ribbonIconEl.addClass("my-plugin-ribbon-class");
 
     // // This adds a status bar item to the bottom of the app. Does not work on mobile apps.
@@ -40,7 +40,8 @@ export default class Obsidian2Hugo extends Plugin {
           this.settings.exposeFolder,
           this.settings.blogRoot,
           this.settings.outputPostFolder,
-          this.settings.outputAssetFolder
+          this.settings.outputStaticFolder,
+          this.settings.staticConfig
         );
       },
     });

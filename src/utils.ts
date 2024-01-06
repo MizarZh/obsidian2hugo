@@ -44,3 +44,7 @@ export function multiSplit(str: string, pos: Array<number>): Array<string> {
 export function join(a: string, b: string): string {
   return posix.join(a, b);
 }
+
+export function resolve(a: string, b: string): string {
+  return posix.resolve(a, b);
+}

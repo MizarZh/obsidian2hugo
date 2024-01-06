@@ -16,7 +16,7 @@ enum linkType {
   Embed,
 }
 
-interface seq {
+interface Seq {
   text: string;
   modText: string;
   name: string;
@@ -33,10 +33,12 @@ export function folder2folder(
   exposeFolder: string,
   blogRoot: string,
   outputPostFolder: string,
-  outputAssetFolder: string
+  outputStaticFolder: string,
+  staticConfig: string
 ) {
   const postsDire = join(blogRoot, outputPostFolder),
-    assetsDire = join(blogRoot, outputAssetFolder);
+    assetsDire = join(blogRoot, outputStaticFolder),
+    staticConfigJSON = JSON.parse(staticConfig);
 
   // @ts-ignore
   const adapter = app.vault.adapter;
@@ -60,8 +62,15 @@ export function folder2folder(
   files.forEach(async (file: TFile) => {
     const metadata = this.app.metadataCache.getFileCache(file);
     const rawText = await this.app.vault.cachedRead(file);
-    const seqArray: Array<seq> = [];
-    genSeqArray(metadata, seqArray, exposeFolder, rawText);
+    const seqArray: Array<Seq> = [];
+    genSeqArray(
+      metadata,
+      seqArray,
+      exposeFolder,
+      outputStaticFolder,
+      staticConfig,
+      rawText
+    );
     seqArray.sort((a, b) => a.start - b.start);
     const pos: Array<number> = [0];
 
@@ -77,24 +86,28 @@ export function folder2folder(
 
       // if the link links to a resource
       // then copy it to the directory
-      if ("png|jpg|svg|webp|pdf".split("|").contains(seqArray[i].ext)) {
-        await copy(
-          join(basePath, seqArray[i].path),
-          join(assetsDire, seqArray[i].name)
-        );
+      for (const j in staticConfigJSON) {
+        if (staticConfigJSON[j].split("|").contains(seqArray[i].ext)) {
+          await copy(
+            join(basePath, seqArray[i].path),
+            join(join(assetsDire, j), seqArray[i].name)
+          );
+        }
       }
     }
 
     const finalText = multiSplitText.join("");
-
-    await outputFile(join(postsDire, file.name), finalText);
+    const relativePath = getRelativePath(exposeFolder, file.path);
+    await outputFile(join(postsDire, relativePath), finalText);
   });
 }
 
 function genSeqArray(
   metadata: CachedMetadata,
-  seqArray: Array<seq>,
+  seqArray: Array<Seq>,
   exposeFolder: string,
+  outputStaticFolder: string,
+  staticConfig: string,
   rawText: string
 ) {
   const links = metadata?.links;
@@ -106,25 +119,44 @@ function genSeqArray(
         links[i].link,
         exposeFolder
       );
-      const relativePath = getRelativePath(exposeFolder, file.path);
+      if (file === null) {
+        const obsLink = rawText.slice(
+          links[i].position.start.offset,
+          links[i].position.end.offset
+        );
 
-      // substitute link from obs to hugo
-      const obsLink = rawText.slice(
-        links[i].position.start.offset,
-        links[i].position.end.offset
-      );
+        seqArray.push({
+          text: obsLink,
+          modText: `[${links[i].displayText}]({{<ref "${links[i].link}">}})`,
+          name: "",
+          ext: "",
+          type: linkType.Link,
+          path: links[i].link,
+          relativePath: "",
+          start: links[i].position.start.offset,
+          end: links[i].position.end.offset,
+        });
+      } else {
+        const relativePath = getRelativePath(exposeFolder, file.path);
 
-      seqArray.push({
-        text: obsLink,
-        modText: `[${links[i].displayText}]({{<ref "${relativePath}">}})`,
-        name: file.name,
-        ext: file.extension,
-        type: linkType.Link,
-        path: file.path,
-        relativePath,
-        start: links[i].position.start.offset,
-        end: links[i].position.end.offset,
-      });
+        // substitute link from obs to hugo
+        const obsLink = rawText.slice(
+          links[i].position.start.offset,
+          links[i].position.end.offset
+        );
+
+        seqArray.push({
+          text: obsLink,
+          modText: `[${links[i].displayText}]({{<ref "${relativePath}">}})`,
+          name: file.name,
+          ext: file.extension,
+          type: linkType.Link,
+          path: file.path,
+          relativePath,
+          start: links[i].position.start.offset,
+          end: links[i].position.end.offset,
+        });
+      }
     }
   }
   if (embeds !== undefined) {
@@ -142,7 +174,13 @@ function genSeqArray(
 
       seqArray.push({
         text: obsLink,
-        modText: `{{<figure src="${file.path}"> title="${embeds[i].displayText}"}}`,
+        modText: `{{<figure src="${join(
+          "/",
+          join(
+            outputStaticFolder.split("/").slice(1).push(staticConfig).join("/"),
+            file.name
+          )
+        )}" title="${embeds[i].displayText}">}}`,
         name: file.name,
         ext: file.extension,
         type: linkType.Embed,
