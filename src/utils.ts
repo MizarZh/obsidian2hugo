@@ -1,5 +1,5 @@
 import { TFile } from "obsidian";
-import { resolve, relative, posix } from "path";
+import { posix } from "path";
 
 export function trimFile(file: TFile): string {
   if (!file) return "";

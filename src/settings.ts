@@ -3,12 +3,20 @@ import Obsidian2Hugo from "./main";
 import { FileSuggest, FolderSuggest } from "./ui";
 
 export interface Settings {
+  blogRoot: string;
+  outputPostFolder: string;
+  isRelative: boolean;
+  outputAssetFolder: string;
   exportFolder: string;
   inputFolder: string;
   assetFolder: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
+  blogRoot: "",
+  outputPostFolder: "",
+  isRelative: false,
+  outputAssetFolder: "",
   exportFolder: "",
   inputFolder: "",
   assetFolder: "",

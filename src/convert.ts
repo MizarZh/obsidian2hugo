@@ -1,12 +1,7 @@
-import { App, TAbstractFile, TFile } from "obsidian";
-import {
-  isInPath,
-  getRelativePath,
-  tripleSplit,
-  multiSplit,
-  join,
-} from "./utils";
-import { writeFile } from "fs/promises";
+import { App, TAbstractFile, TFile, FileSystemAdapter } from "obsidian";
+import { isInPath, getRelativePath, multiSplit, join } from "./utils";
+// import { writeFile, copyFile } from "fs/promises";
+import { copy, outputFile } from "fs-extra";
 // import Obsidian2Hugo from "./main";
 
 enum linkType {
@@ -18,8 +13,11 @@ enum linkType {
 interface seq {
   text: string;
   modText: string;
+  name: string;
+  ext: string;
   type: linkType;
   path: string;
+  relativePath: string;
   start: number;
   end: number;
 }
@@ -31,6 +29,12 @@ export function folder2folder(
 ) {
   const abstractFiles = app.vault.getAllLoadedFiles();
   const files: TFile[] = [];
+  // @ts-ignore
+  const adapter = app.vault.adapter;
+  let basePath = "";
+  if (adapter instanceof FileSystemAdapter) {
+    basePath = adapter.getBasePath();
+  }
   abstractFiles.forEach((file: TAbstractFile) => {
     if (
       file instanceof TFile &&
@@ -65,8 +69,11 @@ export function folder2folder(
         seqArray.push({
           text: obsLink,
           modText: `[${links[i].displayText}]({{<ref "${relativePath}">}})`,
+          name: file.name,
+          ext: file.extension,
           type: linkType.Link,
-          path: relativePath,
+          path: file.path,
+          relativePath,
           start: links[i].position.start.offset,
           end: links[i].position.end.offset,
         });
@@ -87,9 +94,12 @@ export function folder2folder(
 
         seqArray.push({
           text: obsLink,
-          modText: `{{<figure src="${relativePath}"> title="${embeds[i].displayText}"}}`,
+          modText: `{{<figure src="${file.path}"> title="${embeds[i].displayText}"}}`,
+          name: file.name,
+          ext: file.extension,
           type: linkType.Embed,
-          path: relativePath,
+          path: file.path,
+          relativePath,
           start: embeds[i].position.start.offset,
           end: embeds[i].position.end.offset,
         });
@@ -97,6 +107,7 @@ export function folder2folder(
     }
     seqArray.sort((a, b) => a.start - b.start);
     const pos: Array<number> = [0];
+
     for (let i = 0; i < seqArray.length; i++) {
       pos.push(seqArray[i].start);
       pos.push(seqArray[i].end);
@@ -106,12 +117,19 @@ export function folder2folder(
     for (let i = 0; i < seqArray.length; i++) {
       const ii = i * 2 + 1;
       multiSplitText[ii] = seqArray[i].modText;
+
+      // if the link links to a resource
+      // then copy it to the directory
+      if ("png|jpg|svg|webp|pdf".split("|").includes(seqArray[i].ext)) {
+        await copy(
+          join(basePath, seqArray[i].path),
+          join(exportFolder, `assets/${seqArray[i].name}`)
+        );
+      }
     }
 
     const finalText = multiSplitText.join("");
 
-    await writeFile(join(exportFolder, file.name), finalText);
-
-    console.log(finalText);
+    await outputFile(join(exportFolder, file.name), finalText);
   });
 }
