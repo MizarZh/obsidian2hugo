@@ -1,6 +1,6 @@
 import { App, Editor, MarkdownView, Modal, Notice, Plugin } from "obsidian";
 import { SettingTab, Settings, DEFAULT_SETTINGS } from "./settings";
-import { folder2folder } from "./convert";
+import { transfer } from "./convert";
 
 // Remember to rename these classes and interfaces!
 
@@ -14,14 +14,7 @@ export default class Obsidian2Hugo extends Plugin {
       "dice",
       "Sample Plugin",
       (evt: MouseEvent) => {
-        folder2folder(
-          this.app,
-          this.settings.exposeFolder,
-          this.settings.blogRoot,
-          this.settings.outputPostFolder,
-          this.settings.outputStaticFolder,
-          this.settings.staticConfig
-        );
+        transfer(this.app, this.settings);
         new Notice("Export done!");
       }
     );
@@ -35,14 +28,8 @@ export default class Obsidian2Hugo extends Plugin {
       id: "obsidian2hugo-export-folder",
       name: "Export the selected folder",
       callback: () => {
-        folder2folder(
-          this.app,
-          this.settings.exposeFolder,
-          this.settings.blogRoot,
-          this.settings.outputPostFolder,
-          this.settings.outputStaticFolder,
-          this.settings.staticConfig
-        );
+        transfer(this.app, this.settings);
+        new Notice("Export done!");
       },
     });
 
