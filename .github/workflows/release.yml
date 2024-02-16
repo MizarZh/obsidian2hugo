@@ -4,11 +4,11 @@ on:
   push:
     # tags:
     #  - "*"
-      branches:
-        - master
+    branches:
+      - master
 
-env:
-  PLUGIN_NAME: obsidian2hugo # Change this to match the id of your plugin.
+# env:
+#   PLUGIN_NAME: obsidian2hugo # Change this to match the id of your plugin.
 
 jobs:
   build:

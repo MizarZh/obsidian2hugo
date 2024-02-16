@@ -10,7 +10,7 @@ A simple markdown conversion program from obsidian format to hugo format.
 ## Static file config
 Static file config setting controls where other formats will go.
 
-```json
+```js
 // If static path is  `static`
 {
     "images": "png|jpg|svg|webp", // png,jpg,svg and webp will go into static/images folder
