@@ -20,7 +20,7 @@ export const DEFAULT_SETTINGS: Settings = {
   staticConfig: `{
     "images": "png|jpg|svg|webp",
     "other": "pdf"
-  }`,
+}`,
 };
 
 export class SettingTab extends PluginSettingTab {

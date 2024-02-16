@@ -20,7 +20,7 @@ export default class Obsidian2Hugo extends Plugin {
     };
 
     const ribbonIconEl = this.addRibbonIcon(
-      "dice",
+      "arrow-right-from-line",
       "Export to Hugo",
       (evt: MouseEvent) => {
         exportFolder();
