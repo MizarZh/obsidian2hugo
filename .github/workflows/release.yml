@@ -2,10 +2,10 @@ name: Release Obsidian plugin
 
 on:
   push:
-    # tags:
-    #  - "*"
-    branches:
-      - master
+    tags:
+      - "*"
+    #branches:
+    #  - master
 
 # env:
 #   PLUGIN_NAME: obsidian2hugo # Change this to match the id of your plugin.
