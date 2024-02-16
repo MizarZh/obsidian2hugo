@@ -92,11 +92,14 @@ export function export2hugo(app: App, settings: Settings) {
     const finalLinkText = multiSplitText.join("");
 
     // if you don't want to contaminate obsidian tags, use ___tags instead.
-    const finalTextSplit = multiSplit(
-      finalLinkText,
-      [0, metadata.frontmatterPosition.end.offset]
+    const finalTextSplit = multiSplit(finalLinkText, [
+      0,
+      metadata.frontmatterPosition.end.offset,
+    ]);
+    finalTextSplit[0] = finalTextSplit[0].replace(
+      `\n${settings.tagAlternativeName}:`,
+      "\ntags:"
     );
-    finalTextSplit[0] = finalTextSplit[0].replace(/\n__tags:/, "\ntags:");
     const finalText = finalTextSplit.join("");
 
     const relativePath = getRelativePath(exposeFolder, file.path);

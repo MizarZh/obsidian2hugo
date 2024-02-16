@@ -9,6 +9,7 @@ export interface Settings {
   isRelative: boolean;
   outputStaticFolder: string;
   staticConfig: string;
+  tagAlternativeName: string;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -21,6 +22,7 @@ export const DEFAULT_SETTINGS: Settings = {
     "images": "png|jpg|svg|webp",
     "other": "pdf"
 }`,
+  tagAlternativeName: "__tags",
 };
 
 export class SettingTab extends PluginSettingTab {
@@ -94,7 +96,19 @@ export class SettingTab extends PluginSettingTab {
             this.plugin.settings.staticConfig = text;
             await this.plugin.saveSettings();
           });
-        text.inputEl.addClass('static-file-config');
+        text.inputEl.addClass("static-file-config");
+      });
+
+    new Setting(containerEl)
+      .setName("Alternative name for tags")
+      .setDesc("if you don't want 'tags' in hugo contaminate tags in obsidian, then use this to set another name for 'tags' in hugo")
+      .addText((text) => {
+        text
+          .setValue(this.plugin.settings.tagAlternativeName)
+          .onChange(async (text) => {
+            this.plugin.settings.tagAlternativeName = text;
+            await this.plugin.saveSettings();
+          });
       });
   }
 }
