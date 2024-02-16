@@ -30,8 +30,9 @@ interface Seq {
   end: number;
 }
 
-export function transfer(app: App, settings: Settings) {
+export function export2hugo(app: App, settings: Settings) {
   const { exposeFolder, staticConfig, blogRoot, outputPostFolder } = settings;
+  // fetch all the files
   const abstractFiles = app.vault.getAllLoadedFiles(),
     files: TFile[] = [];
   const staticConfigJSON = JSON.parse(staticConfig);
@@ -45,6 +46,7 @@ export function transfer(app: App, settings: Settings) {
     basePath = adapter.getBasePath();
   }
 
+  // find all the .md files
   abstractFiles.forEach((file: TAbstractFile) => {
     if (
       file instanceof TFile &&
@@ -55,8 +57,10 @@ export function transfer(app: App, settings: Settings) {
     }
   });
   // link gathering
+
   files.forEach(async (file: TFile) => {
     const metadata = this.app.metadataCache.getFileCache(file);
+    console.log(metadata);
     const rawText = await this.app.vault.cachedRead(file);
     const seqArray: Array<Seq> = [];
     genSeqArray(metadata, settings, seqArray, rawText);
@@ -85,7 +89,16 @@ export function transfer(app: App, settings: Settings) {
       multiSplitText[ii] = hugoLink;
     }
     // export document
-    const finalText = multiSplitText.join("");
+    const finalLinkText = multiSplitText.join("");
+
+    // if you don't want to contaminate obsidian tags, use ___tags instead.
+    const finalTextSplit = multiSplit(
+      finalLinkText,
+      [0, metadata.frontmatterPosition.end.offset]
+    );
+    finalTextSplit[0] = finalTextSplit[0].replace(/\n__tags:/, "\ntags:");
+    const finalText = finalTextSplit.join("");
+
     const relativePath = getRelativePath(exposeFolder, file.path);
     await outputFile(join(postsDire, relativePath), finalText);
   });
@@ -179,6 +192,7 @@ async function genHugoShortcode(
     console.log(config);
     for (const i in config) {
       if (config[i].split("|").contains(seq.ext)) {
+        // ! move copy to seq
         await copy(
           join(basePath, seq.path),
           join(join(assetsDire, i), seq.name)

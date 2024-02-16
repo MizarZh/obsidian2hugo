@@ -94,6 +94,7 @@ export class SettingTab extends PluginSettingTab {
             this.plugin.settings.staticConfig = text;
             await this.plugin.saveSettings();
           });
+        text.inputEl.addClass('static-file-config');
       });
   }
 }
