@@ -18,8 +18,8 @@ jobs:
         node-version: '20.x'
     - name: Build
       run: |
-        pnpm install
-        pnpm run build
+        yarn
+        yarn run build
     - name: Release with Notes
       uses: softprops/action-gh-release@v1
       with:
