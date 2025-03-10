@@ -1,5 +1,10 @@
 # obsidian2hugo
-A simple markdown conversion program from obsidian format to hugo format.
+A simple markdown conversion program from obsidian format to hugo format (fixit theme).
+
+## Feature
+- Convert obsidian link `[[]]` into hugo file link `{{<ref >}}`.
+- Convert obsidian image link `![[]]` into hugo image link `{{<figure src=xxx title=xxx>}}`.
+- Add `{{<raw>}}` around obsidian math sections to ensure math can be renderred correctly.
 
 ## Usage
 1. Select the folder to expose.

@@ -12,10 +12,11 @@ import { copy, outputFile } from "fs-extra";
 import { Settings } from "./settings";
 // import Obsidian2Hugo from "./main";
 
-enum linkType {
+enum blockType {
   Raw,
   Link,
   Embed,
+  Math,
 }
 
 interface Seq {
@@ -23,7 +24,7 @@ interface Seq {
   name: string;
   display: string;
   ext: string;
-  type: linkType;
+  type: blockType;
   path: string;
   relativePath: string;
   start: number;
@@ -64,6 +65,7 @@ export function export2hugo(app: App, settings: Settings) {
     const rawText = await this.app.vault.cachedRead(file);
     const seqArray: Array<Seq> = [];
     genSeqArray(metadata, settings, seqArray, rawText);
+
     seqArray.sort((a, b) => a.start - b.start);
 
     // auxiliary pos for multisplit
@@ -113,9 +115,11 @@ function genSeqArray(
   seqArray: Seq[],
   rawText: string
 ) {
+  // https://docs.obsidian.md/Reference/TypeScript+API/CachedMetadata
   const { exposeFolder } = settings;
   const links = metadata?.links;
   const embeds = metadata?.embeds;
+  const sections = metadata?.sections;
 
   if (links !== undefined) {
     for (let i = 0; i < links.length; i++) {
@@ -125,7 +129,7 @@ function genSeqArray(
         exposeFolder
       );
 
-      genSeq(file, links[i], settings, linkType.Link, seqArray, rawText);
+      genLinkSeq(file, links[i], settings, blockType.Link, seqArray, rawText);
     }
   }
   if (embeds !== undefined) {
@@ -134,16 +138,38 @@ function genSeqArray(
         embeds[i].link,
         exposeFolder
       );
-      genSeq(file, embeds[i], settings, linkType.Embed, seqArray, rawText);
+      genLinkSeq(file, embeds[i], settings, blockType.Embed, seqArray, rawText);
+    }
+  }
+  if (sections !== undefined) {
+    for (let i = 0; i < sections.length; i++) {
+      if (sections[i].type === "math") {
+        const mathSection = sections[i];
+        const obsLink = rawText.slice(
+          mathSection.position.start.offset,
+          mathSection.position.end.offset
+        );
+        seqArray.push({
+          raw: obsLink,
+          name: "",
+          display: "",
+          ext: "",
+          type: blockType.Math,
+          path: "",
+          relativePath: "",
+          start: mathSection.position.start.offset,
+          end: mathSection.position.end.offset,
+        });
+      }
     }
   }
 }
 
-function genSeq(
+function genLinkSeq(
   file: TFile,
   link: ReferenceCache,
   settings: Settings,
-  type: linkType,
+  type: blockType,
   seqArray: Seq[],
   rawText: string
 ) {
@@ -189,9 +215,9 @@ async function genHugoShortcode(
 ): Promise<string> {
   const { blogRoot, outputStaticFolder } = setting;
   const assetsDire = join(blogRoot, outputStaticFolder);
-  if (seq.type === linkType.Link) {
+  if (seq.type === blockType.Link) {
     return `[${seq.display}]({{<ref "${seq.relativePath}">}})`;
-  } else if (seq.type === linkType.Embed) {
+  } else if (seq.type === blockType.Embed) {
     console.log(config);
     for (const i in config) {
       if (config[i].split("|").contains(seq.ext)) {
@@ -208,6 +234,9 @@ async function genHugoShortcode(
         join(temp.slice(1).join("/"), seq.name)
       )}" title="${seq.display}">}}`;
     }
+  }
+  else if(seq.type === blockType.Math) {
+    return `{{<raw>}}\n${seq.raw}\n{{</raw>}}`
   }
   return seq.raw;
 }
